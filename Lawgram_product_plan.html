@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAWGRAM | Interactive Product Plan v1.6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- Chosen Palette: LAWGRAM Brand Palette (#0A2E5C, #4A90E2, #F5A623) -->
+    <!-- Application Structure Plan: A thematic, dashboard-style single-page application. The structure is divided into logical sections (Overview, Product, Technology, Strategy, Roadmap) rather than mirroring the source document's chapters. This allows stakeholders to explore the plan based on their interests (e.g., an engineer exploring 'Technology', an investor focusing on 'Strategy'). Key interactions include filtering feature lists, hovering for details on diagrams, and clicking to expand complex information like risks, making the dense plan digestible and engaging. -->
+    <!-- Visualization & Content Choices: Quantitative KPIs are shown as prominent stat cards for immediate impact. The MoSCoW feature list is an interactive, filterable grid for clarity. The system architecture is a hover-able diagram built with HTML/CSS for exploration without clutter, accurately reflecting the v1.6 Mermaid diagram. A Chart.js bar chart is used for competitive analysis. The detailed sprint roadmap is presented as a clear, expandable card grid. This multi-faceted approach transforms a static document into an exploratory tool. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        .section-title {
+            color: #0A2E5C;
+        }
+        .nav-link {
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #4A90E2;
+            border-bottom-color: #4A90E2;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            max-width: 90%;
+            width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: pre-wrap;
+            max-width: 300px;
+        }
+        .has-tooltip:hover .tooltip {
+            opacity: 1;
+        }
+        .sprint-card details > summary {
+            list-style: none;
+        }
+        .sprint-card details > summary::-webkit-details-marker {
+            display: none;
+        }
+        .arch-node {
+            z-index: 10;
+        }
+        .arch-line {
+            position: absolute;
+            background-color: #9ca3af;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+        .arch-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #9ca3af;
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-30 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold" style="color: #0A2E5C;">LAWGRAM</span>
+                    <span class="ml-2 text-xs font-semibold text-gray-500">Interactive Product Plan v1.6</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium">개요</a>
+                        <a href="#product" class="nav-link px-3 py-2 text-sm font-medium">제품</a>
+                        <a href="#tech" class="nav-link px-3 py-2 text-sm font-medium">기술</a>
+                        <a href="#strategy" class="nav-link px-3 py-2 text-sm font-medium">전략</a>
+                        <a href="#roadmap" class="nav-link px-3 py-2 text-sm font-medium">로드맵</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">개요: 한눈에 보는 LAWGRAM</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM은 AI 기술을 통해 비효율적인 법률 상담 과정을 혁신하고, 변호사와 의뢰인 모두에게 새로운 가치를 제공하는 것을 목표로 합니다. 본 섹션에서는 제품의 핵심 비전과 성공 지표를 요약하여 보여줍니다.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" id="kpi-cards"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4 text-red-600">문제점 (AS-IS)</h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">변호사:</strong> 비효율적인 초기 상담에 과도한 시간을 소모하며, 정작 중요한 사건에 집중하기 어렵습니다.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">의뢰인:</strong> 법률 문제 발생 시 높은 비용과 심리적 장벽으로 인해 전문가의 도움을 받기 망설여집니다.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card p-6 border-2 border-blue-500">
+                    <h3 class="text-xl font-bold mb-4 text-blue-600">LAWGRAM의 해결책 (TO-BE)</h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">변호사:</strong> AI가 구조화한 '양질의 리드'를 통해 상담 시간을 획기적으로 단축하고 수임 전환율을 높입니다.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">의뢰인:</strong> 24시간 AI 상담으로 자신의 상황을 체계적으로 정리하고, 최적의 변호사와 연결될 기회를 얻습니다.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="product" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">제품: 사용자 경험의 모든 것</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM의 성공은 직관적이고 신뢰할 수 있는 사용자 경험에 달려있습니다. 여기서는 제품의 핵심 기능과 사용자 여정, 그리고 주요 법률 분야를 시각적으로 탐색할 수 있습니다.</p>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-4">핵심 기능 (MoSCoW)</h3>
+                <div class="flex flex-wrap gap-2 mb-4" id="feature-filters"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="feature-cards"></div>
+            </div>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-6">주요 법률 분야 예시</h3>
+                <div id="legal-categories" class="flex flex-col md:flex-row gap-4"></div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-xl font-bold mb-6">핵심 사용자 여정</h3>
+                <div class="relative w-full overflow-x-auto pb-4">
+                    <div class="flex items-center space-x-2 sm:space-x-4 min-w-max" id="user-journey"></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="tech" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">기술: 안정성과 확장성의 기반</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM은 검증된 기술 스택과 최신 AI 모델을 기반으로 구축됩니다. 본 섹션에서는 시스템 아키텍처와 AI 평가 모델의 구조를 인터랙티브하게 확인할 수 있습니다.</p>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-6 text-center">시스템 아키텍처</h3>
+                <div class="p-4 bg-gray-50 rounded-lg relative" id="architecture-diagram-wrapper">
+                    <div class="relative h-[450px] w-full" id="architecture-diagram"></div>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-xl font-bold mb-6">AI 평가 모델</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="evaluation-model"></div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="strategy" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">전략: 시장과 리스크, 그리고 거버넌스</h2>
+            <p class="text-gray-600 mb-8 max-w-full">성공적인 제품은 기술뿐만 아니라 명확한 시장 전략과 철저한 리스크 관리를 필요로 합니다. 경쟁 환경, 잠재적 리스크, 그리고 보안 로드맵을 살펴보세요.</p>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-4">경쟁 환경 분석</h3>
+                <div class="chart-container">
+                    <canvas id="competitionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                     <h3 class="text-xl font-bold mb-4">리스크 매트릭스</h3>
+                     <p class="text-sm text-gray-500 mb-6">각 셀을 클릭하여 상세 내용과 대응 방안을 확인하세요.</p>
+                     <div class="grid grid-cols-4 gap-1 text-center text-sm font-medium">
+                        <div></div>
+                        <div class="p-2 bg-gray-100 rounded-t-md">낮음</div>
+                        <div class="p-2 bg-gray-100 rounded-t-md">중간</div>
+                        <div class="p-2 bg-gray-100 rounded-t-md">높음</div>
+                        <div class="p-2 bg-gray-100 rounded-l-md flex items-center justify-center">높음</div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="tech-high"></div>
+                        <div class="p-2"></div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="legal-high"></div>
+                        <div class="p-2 bg-gray-100 rounded-l-md flex items-center justify-center">중간</div>
+                        <div class="p-2"></div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="data-medium"></div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="op-medium"></div>
+                        <div class="p-2 bg-gray-100 rounded-l-md rounded-bl-md flex items-center justify-center">낮음</div>
+                        <div class="p-2"></div>
+                        <div class="p-2"></div>
+                        <div class="p-2"></div>
+                     </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">보안 로드맵 (ISO 27001)</h3>
+                    <ul class="space-y-4">
+                        <li class="p-4 bg-gray-50 rounded-lg">
+                            <p class="font-semibold text-gray-800">MVP 단계 목표</p>
+                            <p class="text-sm text-gray-600 mt-1">Secure by Design 원칙 적용, 데이터 암호화, 접근 통제, 감사 로그 등 핵심 보안 기능 완벽 구현</p>
+                        </li>
+                        <li class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="font-semibold text-blue-800">Post-MVP 목표</p>
+                            <p class="text-sm text-blue-700 mt-1">투자 유치 후, 정보보호 경영 시스템 국제 표준인 ISO 27001 인증 획득을 목표로 시스템 고도화</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="roadmap" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">로드맵: 6-Sprint MVP 계획</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM MVP는 2주 단위의 6개 스프린트로 개발됩니다. 각 스프린트의 목표와 결과물을 클릭하여 상세 계획을 확인하세요.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="sprint-roadmap">
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modal-container" class="hidden"></div>
+
+    <script>
+        const AppData = {
+            kpis: [
+                { title: "리드 전환율", value: "15%", suffix: "증가", description: "AI가 구조화한 리포트를 통해 변호사의 수임 결정에 긍정적 영향을 미쳐 전환율을 높입니다." },
+                { title: "초기 상담 시간", value: "50%", suffix: "감소", description: "변호사는 리포트를 통해 핵심 사실관계를 빠르게 파악하여 평균 상담 시간을 단축할 수 있습니다." },
+                { title: "사용자 만족도", value: "NPS 40+", suffix: "달성", description: "효율적이고 체계적인 상담 경험은 변호사와 의뢰인 양측 모두의 만족도를 높일 것입니다." }
+            ],
+            features: [
+                { id: "F-001", name: "의뢰인 온보딩 및 동의", priority: "Must", description: "회원가입, 개인정보 처리 및 법적 고지 동의 절차." },
+                { id: "F-001.1", name: "법률 카테고리 선택", priority: "Must", description: "상담 시작 시 주 카테고리 및 세부 카테고리 선택 기능." },
+                { id: "F-001.2", name: "사전 질문 답변", priority: "Must", description: "선택된 카테고리에 맞는 정형화된 초기 질문 세트에 답변하는 기능." },
+                { id: "F-002", name: "AI 법률 상담 챗봇", priority: "Must", description: "사전 질문 답변 후, AI가 생성하는 심층 꼬리 질문에 답변하는 대화형 인터페이스." },
+                { id: "F-004", name: "상담 요약 리포트 생성", priority: "Must", description: "AI가 대화 내용을 분석하여 핵심 사실, 쟁점 등을 요약한 PDF 리포트 생성." },
+                { id: "F-005", name: "변호사 대시보드", priority: "Must", description: "접수된 상담 리포트 목록 조회, 필터링, 상태 관리 기능." },
+                { id: "F-006", name: "상담 예약 시스템", priority: "Should", description: "리포트 확인 후 변호사와 의뢰인이 상담 날짜/시간을 조율하는 기능." },
+                { id: "F-009", name: "실시간 협업 편집", priority: "Could", description: "변호사와 의뢰인이 리포트를 동시에 보며 편집/주석 추가하는 기능." },
+                { id: "F-008", name: "판례/법령 검색 연동", priority: "Won't", description: "신뢰성 있는 법률 정보 제공 기술 및 법률 검토 완료 후 제공 예정입니다." },
+            ],
+            legalCategories: [
+                { name: "형사", icon: "⚖️", sub: ["성폭행", "사기"] },
+                { name: "계약서 검토", icon: "📄", sub: ["부동산 계약", "동업 계약", "기타 계약"] },
+                { name: "이혼", icon: "💔", sub: ["상간자 소송", "양육권", "합의이혼"] }
+            ],
+            journey: [
+                { name: "온보딩/로그인", icon: "👤" },
+                { name: "카테고리 선택", icon: "📂" },
+                { name: "사전 질문 답변", icon: "📝" },
+                { name: "AI 상담 진행", icon: "💬" },
+                { name: "리포트 생성/검토", icon: "📊" },
+            ],
+            architecture: {
+                nodes: [
+                    { id: 'client', name: "Client (Web/Mobile)", description: "사용자가 직접 상호작용하는 프론트엔드 애플리케이션입니다.", position: "top-1/2 left-[5%] -translate-y-1/2" },
+                    { id: 'gateway', name: "API Gateway", description: "모든 클라이언트 요청을 받아 적절한 백엔드 서비스로 라우팅하는 관문입니다.", position: "top-1/2 left-[25%] -translate-y-1/2" },
+                    { id: 'backend', name: "Backend (Spring Boot)", description: "비즈니스 로직, 사용자 관리 등 핵심 기능을 처리하는 메인 서버입니다.", position: "top-[30%] left-1/2 -translate-x-1/2" },
+                    { id: 'ai-server', name: "AI Server (Python/Flask)", description: "SQS 큐의 작업을 받아 RAG 파이프라인을 실행하는 AI 처리 유닛입니다.", position: "top-[70%] left-1/2 -translate-x-1/2" },
+                    { id: 'db', name: "PostgreSQL (RDS)", description: "사용자 정보, 상담 내용 등 정형/반정형 데이터를 저장합니다.", position: "top-[15%] left-[75%]" },
+                    { id: 'vectordb', name: "Vector DB (OpenSearch)", description: "문서 임베딩 벡터를 저장하고 유사도 검색을 수행합니다.", position: "top-[40%] left-[75%]" },
+                    { id: 'gemini', name: "Gemini API", description: "꼬리질문 생성(Flash) 및 보고서 생성(Pro)에 사용되는 LLM입니다.", position: "top-[65%] left-[75%]" },
+                    { id: 'sqs', name: "SQS", description: "백엔드와 AI 서버 간의 비동기 작업을 위한 메시지 큐입니다.", position: "top-1/2 left-[58%]" }
+                ],
+                connections: [
+                    { from: 'client', to: 'gateway' },
+                    { from: 'gateway', to: 'backend' },
+                    { from: 'backend', to: 'db' },
+                    { from: 'backend', to: 'sqs' },
+                    { from: 'sqs', to: 'ai-server' },
+                    { from: 'ai-server', to: 'vectordb' },
+                    { from: 'ai-server', to: 'gemini' }
+                ]
+            },
+            evaluationModel: [
+                { title: "AI 생성 꼬리질문 평가", description: "AI가 맥락에 맞고, 명확하며, 사실관계 파악에 도움이 되는 질문을 생성하는지 평가합니다.", criteria: ["맥락 적합성", "명료성", "목적성"] },
+                { title: "사용자 답변 평가", description: "사용자의 답변이 AI가 다음 질문을 생성하거나 리포트를 작성하는 데 얼마나 유용한지 평가합니다.", criteria: ["구체성", "응답성", "정보 가치"] }
+            ],
+            competition: {
+                labels: ['LAWGRAM', '중개 플랫폼', '직접 상담', '셀프 검색'],
+                datasets: [
+                    { label: '업무 효율성', data: [9, 4, 2, 3], backgroundColor: 'rgba(74, 144, 226, 0.6)' },
+                    { label: '접근성/비용', data: [7, 8, 3, 10], backgroundColor: 'rgba(245, 166, 35, 0.6)' }
+                ]
+            },
+            risks: {
+                'legal-high': { title: '법적/규제 리스크', likelihood: '중간', impact: '높음', content: 'AI의 부정확한 정보 제공으로 인한 법적 분쟁 발생 가능성이 있습니다.', mitigation: '강력한 면책 조항 UI/UX 적용, 변호사 검토(Human-in-the-loop) 프로세스 도입, 법률 자문 보험 가입을 검토합니다.' },
+                'op-medium': { title: '운영 리스크', likelihood: '높음', impact: '중간', content: '런칭 초기, 예상보다 많은 문의로 헬프데스크가 과부하될 수 있습니다.', mitigation: 'FAQ 및 사용자 가이드를 강화하고, 헬프데스크 챗봇을 도입하며, 운영 인력을 사전에 교육하고 증원 계획을 수립합니다.' },
+                'tech-high': { title: '기술/AI 리스크', likelihood: '높음', impact: '높음', content: 'LLM의 환각(Hallucination) 현상으로 인해 잘못된 리포트가 생성될 수 있습니다.', mitigation: 'RAG의 사실 기반 응답(Groundedness)을 강화하고, 생성된 리포트에 대한 내부 평가 모델을 구축하며, 변호사가 리포트를 직접 수정/편집하는 기능을 제공합니다.' },
+                'data-medium': { title: '데이터 리스크', likelihood: '중간', impact: '중간', content: '학습 데이터의 편향으로 특정 사건 유형에 대한 성능이 저하될 수 있습니다.', mitigation: '다양한 사건 유형의 데이터셋을 확보하고, 정기적으로 데이터 편향성을 분석하며, 소수 사건 유형에 대한 별도의 프롬프트를 튜닝합니다.' }
+            },
+            sprints: [
+                { id: 1, title: "기반 구축 및 핵심 설계", goal: "프로젝트의 기술적, 디자인적 토대를 마련하고 핵심 아키텍처를 확정합니다.", planning: "상세 UX/UI 정책 확정, 시스템 아키텍처 설계 완료, 디자인 시스템(v1) 정의", dev: "FE: 프로젝트 초기 설정, UI 라이브러리 구축<br>BE: 프로젝트 초기 설정, DB 스키마 설계, 인증 API(v1)<br>AI: API 서버 초기 설정, API 규약 정의<br>POC: RAG 파이프라인 PoC", test: "단위 테스트 프레임워크 구축, 통합 테스트 계획 수립" },
+                { id: 2, title: "사용자 온보딩 구현", goal: "사용자가 서비스에 가입하고 상담을 시작할 수 있는 첫 관문을 완성합니다.", planning: "온보딩/동의 화면 디자인 확정, 세션 데이터 모델 상세화", dev: "FE: 회원가입/로그인, 동의 화면 구현<br>BE: 회원가입/로그인/동의 API, 세션 관리 API(v1)<br>AI: 꼬리질문 생성 API(v1, Gemini Flash)<br>POC: 임베딩 모델 성능 비교/선정", test: "회원가입/로그인 E2E 테스트, 인증/동의 로직 단위 테스트" },
+                { id: 3, title: "사전 질문 흐름 구현", goal: "상담의 정확도를 높이기 위한 카테고리 선택 및 사전 질문 기능을 구현합니다.", planning: "법률 카테고리 체계 정의, 카테고리별 사전 질문 세트 설계", dev: "FE: 카테고리 선택 UI, 사전 질문 폼 UI 구현<br>BE: 카테고리/사전질문 API, 답변 저장 로직<br>AI: 사전 질문 내용 프롬프트에 반영<br>POC: AI 생성 질문 품질 평가 모델(v1) 개발", test: "카테고리 선택 ~ 사전 질문 E2E 테스트" },
+                { id: 4, title: "핵심 AI 상담 기능 구현", goal: "사용자와 AI 간의 실시간 대화 및 증빙 자료 업로드 기능을 완성합니다.", planning: "AI 채팅 화면 상세 디자인, 파일 관리 정책 정의, 리포트 구조 설계", dev: "FE: AI 채팅 인터페이스, 파일 업로드 컴포넌트<br>BE: 파일 업로드 API(S3), 메시지 저장/조회 API<br>AI: 전체 맥락 기반 질문 생성 로직 고도화<br>POC: 사용자 답변 품질 평가 모델(v1) 개발", test: "AI 채팅 기능 E2E 테스트, 파일 업로드 보안 테스트" },
+                { id: 5, title: "리포트 생성 및 변호사 뷰", goal: "AI 상담 결과를 변호사가 확인할 수 있는 리포트 및 대시보드 기능을 구현합니다.", planning: "변호사 대시보드/리포트 뷰 디자인 확정", dev: "FE: 변호사 대시보드, 리포트 상세 뷰 UI<br>BE: 리포트 생성/상태 관리 API, 대시보드 데이터 조회 API<br>AI: 상담 요약 및 리포트 생성 API (Gemini Pro)<br>POC: 생성된 리포트 오프라인 평가", test: "전체 시나리오 E2E 테스트, 리포트 내용 정확성 검증" },
+                { id: 6, title: "안정화 및 Private Beta 준비", goal: "MVP의 안정성을 확보하고 비공개 테스트를 위한 최종 준비를 마칩니다.", planning: "Private Beta 테스트 계획 수립, 사용자/운영 매뉴얼 작성", dev: "All: 버그 수정 및 성능 최적화, 로깅/모니터링 강화, 보안 취약점 점검 및 보완", test: "사용자 인수 테스트(UAT), 부하/성능 테스트, 최종 보안 점검" }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderKpiCards();
+            renderFeatureFilters();
+            renderFeatureCards('All');
+            renderLegalCategories();
+            renderUserJourney();
+            renderArchitectureDiagram();
+            renderEvaluationModel();
+            renderCompetitionChart();
+            setupRiskMatrix();
+            renderSprintRoadmap();
+            setupNavigation();
+
+            setTimeout(drawArchitectureLines, 100);
+            window.addEventListener('resize', drawArchitectureLines);
+        });
+
+        function renderKpiCards() {
+            const container = document.getElementById('kpi-cards');
+            container.innerHTML = AppData.kpis.map(kpi => `
+                <div class="card p-6 text-center">
+                    <p class="text-sm text-gray-500">${kpi.title}</p>
+                    <p class="text-4xl font-bold my-2" style="color: #0A2E5C;">${kpi.value}</p>
+                    <p class="text-lg font-semibold text-gray-700">${kpi.suffix}</p>
+                    <p class="text-xs text-gray-500 mt-3">${kpi.description}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderFeatureFilters() {
+            const container = document.getElementById('feature-filters');
+            const priorities = ['All', 'Must', 'Should', 'Could', "Won't"];
+            const colors = { 'All': 'blue', 'Must': 'red', 'Should': 'yellow', 'Could': 'green', "Won't": 'gray' };
+            container.innerHTML = priorities.map(p => `
+                <button class="feature-filter-btn px-3 py-1 text-sm font-medium rounded-full border-2 bg-${colors[p]}-100 border-${colors[p]}-500 text-${colors[p]}-800 ${p === 'All' ? 'bg-blue-500 text-white' : ''}" data-priority="${p}">${p}</button>
+            `).join('');
+
+            container.addEventListener('click', e => {
+                if (e.target.classList.contains('feature-filter-btn')) {
+                    const priority = e.target.dataset.priority;
+                    document.querySelectorAll('.feature-filter-btn').forEach(btn => {
+                        const p = btn.dataset.priority;
+                        btn.className = `feature-filter-btn px-3 py-1 text-sm font-medium rounded-full border-2 bg-${colors[p]}-100 border-${colors[p]}-500 text-${colors[p]}-800`;
+                    });
+                    e.target.className = `feature-filter-btn px-3 py-1 text-sm font-medium rounded-full border-2 bg-blue-500 text-white`;
+                    renderFeatureCards(priority);
+                }
+            });
+        }
+
+        function renderFeatureCards(priority) {
+            const container = document.getElementById('feature-cards');
+            const filteredFeatures = priority === 'All' ? AppData.features : AppData.features.filter(f => f.priority === priority);
+            const colors = { 'Must': 'red', 'Should': 'yellow', 'Could': 'green', "Won't": 'gray' };
+            container.innerHTML = filteredFeatures.map(feature => {
+                const color = colors[feature.priority];
+                return `
+                <div class="p-4 rounded-lg border-l-4 border-${color}-500 bg-gray-50">
+                    <div class="flex justify-between items-center mb-1">
+                        <p class="font-bold text-gray-800">${feature.name}</p>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${feature.priority}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">${feature.description}</p>
+                </div>
+            `}).join('');
+        }
+
+        function renderLegalCategories() {
+            const container = document.getElementById('legal-categories');
+            container.innerHTML = AppData.legalCategories.map(cat => `
+                <div class="flex-1 card p-4">
+                    <p class="text-lg font-bold flex items-center"><span class="text-2xl mr-2">${cat.icon}</span> ${cat.name}</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        ${cat.sub.map(s => `<span class="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded-full">${s}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderUserJourney() {
+            const container = document.getElementById('user-journey');
+            container.innerHTML = AppData.journey.map((step, index) => `
+                <div class="flex flex-col items-center text-center w-32">
+                    <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl mb-2">${step.icon}</div>
+                    <p class="font-semibold text-sm text-gray-700">${step.name}</p>
+                </div>
+                ${index < AppData.journey.length - 1 ? `<div class="flex-1 flex items-center justify-center"><span class="text-2xl text-gray-300 font-light">→</span></div>` : ''}
+            `).join('');
+        }
+
+        function renderArchitectureDiagram() {
+            const container = document.getElementById('architecture-diagram');
+            container.innerHTML = AppData.architecture.nodes.map(item => `
+                <div id="arch-${item.id}" class="arch-node has-tooltip absolute p-2 text-center bg-white border-2 border-blue-300 rounded-lg shadow-md transform ${item.position} w-32">
+                    <span class="text-xs font-bold text-blue-800">${item.name}</span>
+                    <div class="tooltip bottom-full mb-2">${item.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function createLine(container, fromEl, toEl) {
+            const fromRect = fromEl.getBoundingClientRect();
+            const toRect = toEl.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            const fromX = fromRect.left + fromRect.width / 2 - containerRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left + toRect.width / 2 - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+
+            const line = document.createElement('div');
+            line.className = 'arch-line';
+            line.style.width = `${length}px`;
+            line.style.left = `${fromX}px`;
+            line.style.top = `${fromY}px`;
+            line.style.transform = `rotate(${angle}deg)`;
+            container.appendChild(line);
+
+            const arrow = document.createElement('div');
+            arrow.className = 'arch-arrow';
+            arrow.style.left = `${toX}px`;
+            arrow.style.top = `${toY}px`;
+            arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            container.appendChild(arrow);
+        }
+
+        function drawArchitectureLines() {
+            const container = document.getElementById('architecture-diagram');
+            container.querySelectorAll('.arch-line, .arch-arrow').forEach(el => el.remove());
+
+            AppData.architecture.connections.forEach(conn => {
+                const fromEl = document.getElementById(`arch-${conn.from}`);
+                const toEl = document.getElementById(`arch-${conn.to}`);
+                if (fromEl && toEl) {
+                    createLine(container, fromEl, toEl);
+                }
+            });
+        }
+
+        function renderEvaluationModel() {
+            const container = document.getElementById('evaluation-model');
+            container.innerHTML = AppData.evaluationModel.map(model => `
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <p class="font-bold text-lg text-gray-800">${model.title}</p>
+                    <p class="text-sm text-gray-600 mt-1 mb-3">${model.description}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${model.criteria.map(c => `<span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${c}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCompetitionChart() {
+            const ctx = document.getElementById('competitionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: AppData.competition,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 10, title: { display: true, text: '평가 점수 (10점 만점)' } } },
+                    plugins: { title: { display: true, text: 'LAWGRAM vs 경쟁/대체재' } }
+                }
+            });
+        }
+
+        function setupRiskMatrix() {
+            const cells = document.querySelectorAll('.risk-cell');
+            const colors = { high: 'bg-red-200', medium: 'bg-yellow-200' };
+            const riskData = AppData.risks;
+
+            Object.keys(riskData).forEach(key => {
+                const cell = document.querySelector(`[data-risk-id="${key}"]`);
+                if (cell) {
+                    const impact = riskData[key].impact;
+                    const colorClass = impact === '높음' ? colors.high : colors.medium;
+                    cell.className += ` ${colorClass} hover:ring-2 ring-blue-500 transition-all flex items-center justify-center p-1`;
+                    cell.innerHTML = `<span class="text-xs">${riskData[key].title}</span>`;
+                    cell.addEventListener('click', () => showRiskModal(riskData[key]));
+                }
+            });
+        }
+
+        function showRiskModal(risk) {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.remove('hidden');
+            modalContainer.innerHTML = `
+                <div class="modal-backdrop">
+                    <div class="modal-content">
+                        <h3 class="text-2xl font-bold mb-4">${risk.title}</h3>
+                        <div class="mb-4 space-y-2">
+                            <p><span class="font-semibold">가능성:</span> ${risk.likelihood}</p>
+                            <p><span class="font-semibold">영향도:</span> ${risk.impact}</p>
+                            <p><span class="font-semibold">상세 내용:</span> ${risk.content}</p>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="font-bold text-blue-800 mb-2">대응 방안</p>
+                            <p class="text-sm text-blue-700">${risk.mitigation}</p>
+                        </div>
+                        <button id="close-modal" class="mt-6 w-full bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors">닫기</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('close-modal').addEventListener('click', () => modalContainer.classList.add('hidden'));
+            modalContainer.querySelector('.modal-backdrop').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) modalContainer.classList.add('hidden');
+            });
+        }
+
+        function renderSprintRoadmap() {
+            const container = document.getElementById('sprint-roadmap');
+            container.innerHTML = AppData.sprints.map(sprint => `
+                <div class="sprint-card card">
+                    <details>
+                        <summary class="p-4 cursor-pointer">
+                            <p class="text-sm font-semibold text-blue-600">Sprint ${sprint.id}</p>
+                            <p class="text-lg font-bold">${sprint.title}</p>
+                            <p class="text-xs text-gray-500 mt-1">${sprint.goal}</p>
+                        </summary>
+                        <div class="px-4 pb-4 border-t border-gray-200">
+                            <div class="mt-4">
+                                <p class="font-semibold text-sm">기획/디자인:</p>
+                                <p class="text-xs text-gray-600">${sprint.planning}</p>
+                            </div>
+                            <div class="mt-3">
+                                <p class="font-semibold text-sm">개발:</p>
+                                <p class="text-xs text-gray-600">${sprint.dev}</p>
+                            </div>
+                             <div class="mt-3">
+                                <p class="font-semibold text-sm">테스트:</p>
+                                <p class="text-xs text-gray-600">${sprint.test}</p>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            `).join('');
+        }
+
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => observer.observe(section));
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+        }
+
+    </script>
+</body>
+</html>
