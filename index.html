@@ -3,1113 +3,636 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚖️ AI 법률 상담 SQL 생성기</title>
+    <title>LAWGRAM | Interactive Product Plan v1.6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- Chosen Palette: LAWGRAM Brand Palette (#0A2E5C, #4A90E2, #F5A623) -->
+    <!-- Application Structure Plan: A thematic, dashboard-style single-page application. The structure is divided into logical sections (Overview, Product, Technology, Strategy, Roadmap) rather than mirroring the source document's chapters. This allows stakeholders to explore the plan based on their interests (e.g., an engineer exploring 'Technology', an investor focusing on 'Strategy'). Key interactions include filtering feature lists, hovering for details on diagrams, and clicking to expand complex information like risks, making the dense plan digestible and engaging. -->
+    <!-- Visualization & Content Choices: Quantitative KPIs are shown as prominent stat cards for immediate impact. The MoSCoW feature list is an interactive, filterable grid for clarity. The system architecture is a hover-able diagram built with HTML/CSS for exploration without clutter, accurately reflecting the v1.6 Mermaid diagram. A Chart.js bar chart is used for competitive analysis. The detailed sprint roadmap is presented as a clear, expandable card grid. This multi-faceted approach transforms a static document into an exploratory tool. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        /* 기본 스타일 */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 1.5rem;
-            background-color: #f8f9fa;
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F8F9FA;
             color: #212529;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
         }
-        main {
-            display: flex;
-            flex: 1;
-            gap: 1.5rem;
-            flex-wrap: wrap;
+        .section-title {
+            color: #0A2E5C;
         }
-        h1, h2 {
-            margin-top: 0;
-            border-bottom: 2px solid #dee2e6;
-            padding-bottom: 0.5rem;
+        .nav-link {
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
         }
-        h1 { font-size: 2rem; }
-        h2 { font-size: 1.5rem; }
-
-        /* 레이아웃 */
-        .panel {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        .nav-link:hover, .nav-link.active {
+            color: #4A90E2;
+            border-bottom-color: #4A90E2;
         }
-        #left-panel {
-            flex: 3;
-            min-width: 400px;
-        }
-        #right-panel {
-            flex: 2;
-            min-width: 300px;
-            display: flex;
-            flex-direction: column;
-        }
-        #bottom-panel {
-            width: 100%;
-            margin-top: 1.5rem;
-        }
-
-        /* 컨트롤 */
-        button, input[type="file"]::file-selector-button {
-            font-size: 0.9rem;
-            padding: 0.5rem 0.8rem;
-            border: 1px solid #0d6efd;
-            border-radius: 5px;
-            background-color: #0d6efd;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        button:hover, input[type="file"]::file-selector-button:hover {
-            background-color: #0b5ed7;
-            border-color: #0a58ca;
-        }
-        button:disabled {
-            background-color: #adb5bd;
-            border-color: #adb5bd;
-            cursor: not-allowed;
-        }
-        button.secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-        button.secondary:hover {
-            background-color: #5c636a;
-            border-color: #565e64;
-        }
-        button.outline {
+        .card {
             background-color: white;
-            color: #0d6efd;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
         }
-        button.outline:hover {
-            background-color: #f8f9fa;
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
         }
-
-        /* 카테고리 리스트 */
-        .category-group {
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-        }
-        .category-group-header {
-            font-size: 1.2rem;
-            font-weight: 600;
-            padding: 0.75rem 1rem;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .category-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f1f3f5;
-        }
-        .category-item:last-child { border-bottom: none; }
-        .category-item input[type="checkbox"] {
-            width: 1.15rem;
-            height: 1.15rem;
-        }
-        .category-item-label {
-            width: 150px;
-            font-weight: 500;
-        }
-        .file-status {
-            flex: 1;
-            font-size: 0.9rem;
-            color: #6c757d;
-            background-color: #f8f9fa;
-            border: 1px dashed #ced4da;
-            padding: 0.4rem 0.6rem;
-            border-radius: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .file-status.loaded {
-            color: #d63384;
-            font-weight: 600;
-            border-style: solid;
-            border-color: #e6a9c7;
-            background-color: #fdf3f8;
-        }
-
-        /* 파일 입력 숨기기 */
-        input[type="file"] {
-            display: none;
-        }
-
-        /* 로그 */
-        #log-output {
-            flex: 1;
+        .chart-container {
+            position: relative;
             width: 100%;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            font-size: 0.85rem;
-            color: #343a40;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            padding: 0.5rem;
-            box-sizing: border-box;
-            background-color: #f8f9fa;
-            min-height: 200px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
         }
-
-        /* 모달 */
-        .modal {
-            display: none;
+        .modal-backdrop {
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            animation: fadeIn 0.3s;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 900px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            animation: slideIn 0.3s;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 10px;
-        }
-        .modal-body {
-            padding-top: 15px;
-            max-height: 70vh;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            max-width: 90%;
+            width: 800px;
+            max-height: 90vh;
             overflow-y: auto;
         }
-        .modal-body pre, .modal-body textarea {
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            font-size: 0.9rem;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 10px;
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
             white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 60vh;
-            overflow-y: auto;
+            max-width: 300px;
         }
-        .modal-body textarea {
-            width: 100%;
-            box-sizing: border-box;
-            min-height: 60vh;
-            resize: vertical;
+        .has-tooltip:hover .tooltip {
+            opacity: 1;
         }
-        .close-button {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+        .sprint-card details > summary {
+            list-style: none;
         }
-        .close-button:hover, .close-button:focus {
-            color: black;
+        .sprint-card details > summary::-webkit-details-marker {
+            display: none;
         }
-
-        /* 트리 뷰 */
-        .tree-view details {
-            margin-left: 20px;
-            border-left: 1px dashed #adb5bd;
-            margin-top: 5px;
+        .arch-node {
+            z-index: 10;
         }
-        .tree-view summary {
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            background-color: #f1f3f5;
-            font-weight: bold;
+        .arch-line {
+            position: absolute;
+            background-color: #9ca3af;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 1;
         }
-        .tree-view summary:hover { background-color: #e9ecef; }
-        .tree-view .answer {
-            margin-left: 15px;
-            padding: 5px;
+        .arch-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #9ca3af;
+            transform-origin: 0 0;
+            z-index: 1;
         }
-        .tree-view .answer code {
-            font-weight: bold;
-            color: #0b5ed7;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
     </style>
 </head>
-<body>
+<body class="antialiased">
 
-    <header>
-        <h1>⚖️ AI 법률 상담 SQL 생성기 (Web Ver.)</h1>
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-30 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold" style="color: #0A2E5C;">LAWGRAM</span>
+                    <span class="ml-2 text-xs font-semibold text-gray-500">Interactive Product Plan v1.6</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium">개요</a>
+                        <a href="#product" class="nav-link px-3 py-2 text-sm font-medium">제품</a>
+                        <a href="#tech" class="nav-link px-3 py-2 text-sm font-medium">기술</a>
+                        <a href="#strategy" class="nav-link px-3 py-2 text-sm font-medium">전략</a>
+                        <a href="#roadmap" class="nav-link px-3 py-2 text-sm font-medium">로드맵</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
     </header>
 
-    <main>
-        <div id="left-panel" class="panel">
-            <h2>1. 카테고리 및 JSON 파일 선택</h2>
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
-            <div style="background-color: #fff3cd; border: 1px solid #ffe69c; color: #664d03; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem;">
-                <strong>참고:</strong> 웹 버전은 백엔드 서버 없이 동작하므로,
-                <a href="https://developer.mozilla.org/ko/docs/Web/HTTP/CORS" target="_blank">CORS 정책</a>
-                제한으로 인해 번역 기능을 지원하지 않습니다. SQL은 기본 언어('ko')로만 생성됩니다.
-            </div>
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">개요: 한눈에 보는 LAWGRAM</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM은 AI 기술을 통해 비효율적인 법률 상담 과정을 혁신하고, 변호사와 의뢰인 모두에게 새로운 가치를 제공하는 것을 목표로 합니다. 본 섹션에서는 제품의 핵심 비전과 성공 지표를 요약하여 보여줍니다.</p>
 
-            <div>
-                <button id="toggle-all-checkboxes">전체 선택/해제</button>
-                <button id="show-schema-button" class="secondary outline" style="float: right;">📜 스키마 보기</button>
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12" id="kpi-cards"></div>
 
-            <div id="category-list" style="margin-top: 1rem;">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4 text-red-600">문제점 (AS-IS)</h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">변호사:</strong> 비효율적인 초기 상담에 과도한 시간을 소모하며, 정작 중요한 사건에 집중하기 어렵습니다.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">의뢰인:</strong> 법률 문제 발생 시 높은 비용과 심리적 장벽으로 인해 전문가의 도움을 받기 망설여집니다.
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-        </div>
+                <div class="card p-6 border-2 border-blue-500">
+                    <h3 class="text-xl font-bold mb-4 text-blue-600">LAWGRAM의 해결책 (TO-BE)</h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">변호사:</strong> AI가 구조화한 '양질의 리드'를 통해 상담 시간을 획기적으로 단축하고 수임 전환율을 높입니다.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-3 mt-1">●</span>
+                            <div>
+                                <strong class="text-gray-800">의뢰인:</strong> 24시간 AI 상담으로 자신의 상황을 체계적으로 정리하고, 최적의 변호사와 연결될 기회를 얻습니다.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-        <div id="right-panel" class="panel">
-            <h2>2. 처리 로그</h2>
-            <textarea id="log-output" readonly></textarea>
-        </div>
+        <hr class="my-16 border-gray-200">
+
+        <section id="product" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">제품: 사용자 경험의 모든 것</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM의 성공은 직관적이고 신뢰할 수 있는 사용자 경험에 달려있습니다. 여기서는 제품의 핵심 기능과 사용자 여정, 그리고 주요 법률 분야를 시각적으로 탐색할 수 있습니다.</p>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-4">핵심 기능 (MoSCoW)</h3>
+                <div class="flex flex-wrap gap-2 mb-4" id="feature-filters"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="feature-cards"></div>
+            </div>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-6">주요 법률 분야 예시</h3>
+                <div id="legal-categories" class="flex flex-col md:flex-row gap-4"></div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-xl font-bold mb-6">핵심 사용자 여정</h3>
+                <div class="relative w-full overflow-x-auto pb-4">
+                    <div class="flex items-center space-x-2 sm:space-x-4 min-w-max" id="user-journey"></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="tech" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">기술: 안정성과 확장성의 기반</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM은 검증된 기술 스택과 최신 AI 모델을 기반으로 구축됩니다. 본 섹션에서는 시스템 아키텍처와 AI 평가 모델의 구조를 인터랙티브하게 확인할 수 있습니다.</p>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-6 text-center">시스템 아키텍처</h3>
+                <div class="p-4 bg-gray-50 rounded-lg relative" id="architecture-diagram-wrapper">
+                    <div class="relative h-[450px] w-full" id="architecture-diagram"></div>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-xl font-bold mb-6">AI 평가 모델</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="evaluation-model"></div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="strategy" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">전략: 시장과 리스크, 그리고 거버넌스</h2>
+            <p class="text-gray-600 mb-8 max-w-full">성공적인 제품은 기술뿐만 아니라 명확한 시장 전략과 철저한 리스크 관리를 필요로 합니다. 경쟁 환경, 잠재적 리스크, 그리고 보안 로드맵을 살펴보세요.</p>
+
+            <div class="card p-6 mb-12">
+                <h3 class="text-xl font-bold mb-4">경쟁 환경 분석</h3>
+                <div class="chart-container">
+                    <canvas id="competitionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                     <h3 class="text-xl font-bold mb-4">리스크 매트릭스</h3>
+                     <p class="text-sm text-gray-500 mb-6">각 셀을 클릭하여 상세 내용과 대응 방안을 확인하세요.</p>
+                     <div class="grid grid-cols-4 gap-1 text-center text-sm font-medium">
+                        <div></div>
+                        <div class="p-2 bg-gray-100 rounded-t-md">낮음</div>
+                        <div class="p-2 bg-gray-100 rounded-t-md">중간</div>
+                        <div class="p-2 bg-gray-100 rounded-t-md">높음</div>
+                        <div class="p-2 bg-gray-100 rounded-l-md flex items-center justify-center">높음</div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="tech-high"></div>
+                        <div class="p-2"></div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="legal-high"></div>
+                        <div class="p-2 bg-gray-100 rounded-l-md flex items-center justify-center">중간</div>
+                        <div class="p-2"></div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="data-medium"></div>
+                        <div class="risk-cell cursor-pointer" data-risk-id="op-medium"></div>
+                        <div class="p-2 bg-gray-100 rounded-l-md rounded-bl-md flex items-center justify-center">낮음</div>
+                        <div class="p-2"></div>
+                        <div class="p-2"></div>
+                        <div class="p-2"></div>
+                     </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">보안 로드맵 (ISO 27001)</h3>
+                    <ul class="space-y-4">
+                        <li class="p-4 bg-gray-50 rounded-lg">
+                            <p class="font-semibold text-gray-800">MVP 단계 목표</p>
+                            <p class="text-sm text-gray-600 mt-1">Secure by Design 원칙 적용, 데이터 암호화, 접근 통제, 감사 로그 등 핵심 보안 기능 완벽 구현</p>
+                        </li>
+                        <li class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="font-semibold text-blue-800">Post-MVP 목표</p>
+                            <p class="text-sm text-blue-700 mt-1">투자 유치 후, 정보보호 경영 시스템 국제 표준인 ISO 27001 인증 획득을 목표로 시스템 고도화</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="roadmap" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-2 section-title">로드맵: 6-Sprint MVP 계획</h2>
+            <p class="text-gray-600 mb-8 max-w-full">LAWGRAM MVP는 2주 단위의 6개 스프린트로 개발됩니다. 각 스프린트의 목표와 결과물을 클릭하여 상세 계획을 확인하세요.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="sprint-roadmap">
+            </div>
+        </section>
+
     </main>
 
-    <footer id="bottom-panel" class="panel">
-        <h2>3. SQL 생성 및 다운로드</h2>
-        <button id="generate-sql-button" style="width: 200px; height: 50px; font-size: 1.2rem;">🚀 SQL 생성하기</button>
-        <button id="download-sql-button" class="secondary" style="width: 200px; height: 50px; font-size: 1.2rem;" disabled>📄 SQL 다운로드</button>
-    </footer>
-
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title">모달 제목</h2>
-                <span id="modal-close" class="close-button">&times;</span>
-            </div>
-            <div id="modal-body" class="modal-body">
-                </div>
-        </div>
-    </div>
-
-    <input type="file" id="file-picker" accept=".json">
-
+    <div id="modal-container" class="hidden"></div>
 
     <script>
-        // --- 0. 상수 정의 (default_values.py + schema.sql) ---
-        // 'default_values.py'의 CATEGORIES를 JS 객체로 변환
-        const CATEGORIES = {
-            '1': {'id': 100, 'code': 'INSURANCE', 'name': '보험금', 'subs': {
-                '1': {'id': 101, 'code': 'INS_SUICIDE', 'name': '자살보험금'}, '2': {'id': 102, 'code': 'INS_ACCIDENT_DEATH', 'name': '상해사망보험금'},
-                '3': {'id': 103, 'code': 'INS_DISPUTE', 'name': '보험금분쟁'}, '4': {'id': 104, 'code': 'INS_FRAUD', 'name': '보험사기'},
-                '5': {'id': 105, 'code': 'INS_FIRE', 'name': '화재보험'}, }},
-            '2': {'id': 200, 'code': 'TRAFFIC_ACCIDENT', 'name': '교통사고', 'subs': {
-                '1': {'id': 201, 'code': 'TRF_DRIVER_INS', 'name': '운전자보험'}, '2': {'id': 202, 'code': 'TRF_12_NEGLIGENCE', 'name': '12대 중과실'},
-                '3': {'id': 203, 'code': 'TRF_INJURY', 'name': '업무상과실치상'}, '4': {'id': 204, 'code': 'TRF_MOTORCYCLE', 'name': '이륜차사고'}, }},
-            '3': {'id': 300, 'code': 'CRIMINAL', 'name': '형사', 'subs': {
-                '1': {'id': 301, 'code': 'CRM_ASSAULT', 'name': '폭행/상해'}, '2': {'id': 302, 'code': 'CRM_COMM_OBSCENITY', 'name': '통매음'},
-                '3': {'id': 303, 'code': 'CRM_FRAUD', 'name': '사기'}, '4': {'id': 304, 'code': 'CRM_DEFAMATION', 'name': '모욕/명예훼손'},
-                '5': {'id': 305, 'code': 'CRM_SEXUAL', 'name': '성범죄'}, }}
+        const AppData = {
+            kpis: [
+                { title: "리드 전환율", value: "15%", suffix: "증가", description: "AI가 구조화한 리포트를 통해 변호사의 수임 결정에 긍정적 영향을 미쳐 전환율을 높입니다." },
+                { title: "초기 상담 시간", value: "50%", suffix: "감소", description: "변호사는 리포트를 통해 핵심 사실관계를 빠르게 파악하여 평균 상담 시간을 단축할 수 있습니다." },
+                { title: "사용자 만족도", value: "NPS 40+", suffix: "달성", description: "효율적이고 체계적인 상담 경험은 변호사와 의뢰인 양측 모두의 만족도를 높일 것입니다." }
+            ],
+            features: [
+                { id: "F-001", name: "의뢰인 온보딩 및 동의", priority: "Must", description: "회원가입, 개인정보 처리 및 법적 고지 동의 절차." },
+                { id: "F-001.1", name: "법률 카테고리 선택", priority: "Must", description: "상담 시작 시 주 카테고리 및 세부 카테고리 선택 기능." },
+                { id: "F-001.2", name: "사전 질문 답변", priority: "Must", description: "선택된 카테고리에 맞는 정형화된 초기 질문 세트에 답변하는 기능." },
+                { id: "F-002", name: "AI 법률 상담 챗봇", priority: "Must", description: "사전 질문 답변 후, AI가 생성하는 심층 꼬리 질문에 답변하는 대화형 인터페이스." },
+                { id: "F-004", name: "상담 요약 리포트 생성", priority: "Must", description: "AI가 대화 내용을 분석하여 핵심 사실, 쟁점 등을 요약한 PDF 리포트 생성." },
+                { id: "F-005", name: "변호사 대시보드", priority: "Must", description: "접수된 상담 리포트 목록 조회, 필터링, 상태 관리 기능." },
+                { id: "F-006", name: "상담 예약 시스템", priority: "Should", description: "리포트 확인 후 변호사와 의뢰인이 상담 날짜/시간을 조율하는 기능." },
+                { id: "F-009", name: "실시간 협업 편집", priority: "Could", description: "변호사와 의뢰인이 리포트를 동시에 보며 편집/주석 추가하는 기능." },
+                { id: "F-008", name: "판례/법령 검색 연동", priority: "Won't", description: "신뢰성 있는 법률 정보 제공 기술 및 법률 검토 완료 후 제공 예정입니다." },
+            ],
+            legalCategories: [
+                { name: "형사", icon: "⚖️", sub: ["성폭행", "사기"] },
+                { name: "계약서 검토", icon: "📄", sub: ["부동산 계약", "동업 계약", "기타 계약"] },
+                { name: "이혼", icon: "💔", sub: ["상간자 소송", "양육권", "합의이혼"] }
+            ],
+            journey: [
+                { name: "온보딩/로그인", icon: "👤" },
+                { name: "카테고리 선택", icon: "📂" },
+                { name: "사전 질문 답변", icon: "📝" },
+                { name: "AI 상담 진행", icon: "💬" },
+                { name: "리포트 생성/검토", icon: "📊" },
+            ],
+            architecture: {
+                nodes: [
+                    { id: 'client', name: "Client (Web/Mobile)", description: "사용자가 직접 상호작용하는 프론트엔드 애플리케이션입니다.", position: "top-1/2 left-[5%] -translate-y-1/2" },
+                    { id: 'gateway', name: "API Gateway", description: "모든 클라이언트 요청을 받아 적절한 백엔드 서비스로 라우팅하는 관문입니다.", position: "top-1/2 left-[25%] -translate-y-1/2" },
+                    { id: 'backend', name: "Backend (Spring Boot)", description: "비즈니스 로직, 사용자 관리 등 핵심 기능을 처리하는 메인 서버입니다.", position: "top-[30%] left-1/2 -translate-x-1/2" },
+                    { id: 'ai-server', name: "AI Server (Python/Flask)", description: "SQS 큐의 작업을 받아 RAG 파이프라인을 실행하는 AI 처리 유닛입니다.", position: "top-[70%] left-1/2 -translate-x-1/2" },
+                    { id: 'db', name: "PostgreSQL (RDS)", description: "사용자 정보, 상담 내용 등 정형/반정형 데이터를 저장합니다.", position: "top-[15%] left-[75%]" },
+                    { id: 'vectordb', name: "Vector DB (OpenSearch)", description: "문서 임베딩 벡터를 저장하고 유사도 검색을 수행합니다.", position: "top-[40%] left-[75%]" },
+                    { id: 'gemini', name: "Gemini API", description: "꼬리질문 생성(Flash) 및 보고서 생성(Pro)에 사용되는 LLM입니다.", position: "top-[65%] left-[75%]" },
+                    { id: 'sqs', name: "SQS", description: "백엔드와 AI 서버 간의 비동기 작업을 위한 메시지 큐입니다.", position: "top-1/2 left-[58%]" }
+                ],
+                connections: [
+                    { from: 'client', to: 'gateway' },
+                    { from: 'gateway', to: 'backend' },
+                    { from: 'backend', to: 'db' },
+                    { from: 'backend', to: 'sqs' },
+                    { from: 'sqs', to: 'ai-server' },
+                    { from: 'ai-server', to: 'vectordb' },
+                    { from: 'ai-server', to: 'gemini' }
+                ]
+            },
+            evaluationModel: [
+                { title: "AI 생성 꼬리질문 평가", description: "AI가 맥락에 맞고, 명확하며, 사실관계 파악에 도움이 되는 질문을 생성하는지 평가합니다.", criteria: ["맥락 적합성", "명료성", "목적성"] },
+                { title: "사용자 답변 평가", description: "사용자의 답변이 AI가 다음 질문을 생성하거나 리포트를 작성하는 데 얼마나 유용한지 평가합니다.", criteria: ["구체성", "응답성", "정보 가치"] }
+            ],
+            competition: {
+                labels: ['LAWGRAM', '중개 플랫폼', '직접 상담', '셀프 검색'],
+                datasets: [
+                    { label: '업무 효율성', data: [9, 4, 2, 3], backgroundColor: 'rgba(74, 144, 226, 0.6)' },
+                    { label: '접근성/비용', data: [7, 8, 3, 10], backgroundColor: 'rgba(245, 166, 35, 0.6)' }
+                ]
+            },
+            risks: {
+                'legal-high': { title: '법적/규제 리스크', likelihood: '중간', impact: '높음', content: 'AI의 부정확한 정보 제공으로 인한 법적 분쟁 발생 가능성이 있습니다.', mitigation: '강력한 면책 조항 UI/UX 적용, 변호사 검토(Human-in-the-loop) 프로세스 도입, 법률 자문 보험 가입을 검토합니다.' },
+                'op-medium': { title: '운영 리스크', likelihood: '높음', impact: '중간', content: '런칭 초기, 예상보다 많은 문의로 헬프데스크가 과부하될 수 있습니다.', mitigation: 'FAQ 및 사용자 가이드를 강화하고, 헬프데스크 챗봇을 도입하며, 운영 인력을 사전에 교육하고 증원 계획을 수립합니다.' },
+                'tech-high': { title: '기술/AI 리스크', likelihood: '높음', impact: '높음', content: 'LLM의 환각(Hallucination) 현상으로 인해 잘못된 리포트가 생성될 수 있습니다.', mitigation: 'RAG의 사실 기반 응답(Groundedness)을 강화하고, 생성된 리포트에 대한 내부 평가 모델을 구축하며, 변호사가 리포트를 직접 수정/편집하는 기능을 제공합니다.' },
+                'data-medium': { title: '데이터 리스크', likelihood: '중간', impact: '중간', content: '학습 데이터의 편향으로 특정 사건 유형에 대한 성능이 저하될 수 있습니다.', mitigation: '다양한 사건 유형의 데이터셋을 확보하고, 정기적으로 데이터 편향성을 분석하며, 소수 사건 유형에 대한 별도의 프롬프트를 튜닝합니다.' }
+            },
+            sprints: [
+                { id: 1, title: "기반 구축 및 핵심 설계", goal: "프로젝트의 기술적, 디자인적 토대를 마련하고 핵심 아키텍처를 확정합니다.", planning: "상세 UX/UI 정책 확정, 시스템 아키텍처 설계 완료, 디자인 시스템(v1) 정의", dev: "FE: 프로젝트 초기 설정, UI 라이브러리 구축<br>BE: 프로젝트 초기 설정, DB 스키마 설계, 인증 API(v1)<br>AI: API 서버 초기 설정, API 규약 정의<br>POC: RAG 파이프라인 PoC", test: "단위 테스트 프레임워크 구축, 통합 테스트 계획 수립" },
+                { id: 2, title: "사용자 온보딩 구현", goal: "사용자가 서비스에 가입하고 상담을 시작할 수 있는 첫 관문을 완성합니다.", planning: "온보딩/동의 화면 디자인 확정, 세션 데이터 모델 상세화", dev: "FE: 회원가입/로그인, 동의 화면 구현<br>BE: 회원가입/로그인/동의 API, 세션 관리 API(v1)<br>AI: 꼬리질문 생성 API(v1, Gemini Flash)<br>POC: 임베딩 모델 성능 비교/선정", test: "회원가입/로그인 E2E 테스트, 인증/동의 로직 단위 테스트" },
+                { id: 3, title: "사전 질문 흐름 구현", goal: "상담의 정확도를 높이기 위한 카테고리 선택 및 사전 질문 기능을 구현합니다.", planning: "법률 카테고리 체계 정의, 카테고리별 사전 질문 세트 설계", dev: "FE: 카테고리 선택 UI, 사전 질문 폼 UI 구현<br>BE: 카테고리/사전질문 API, 답변 저장 로직<br>AI: 사전 질문 내용 프롬프트에 반영<br>POC: AI 생성 질문 품질 평가 모델(v1) 개발", test: "카테고리 선택 ~ 사전 질문 E2E 테스트" },
+                { id: 4, title: "핵심 AI 상담 기능 구현", goal: "사용자와 AI 간의 실시간 대화 및 증빙 자료 업로드 기능을 완성합니다.", planning: "AI 채팅 화면 상세 디자인, 파일 관리 정책 정의, 리포트 구조 설계", dev: "FE: AI 채팅 인터페이스, 파일 업로드 컴포넌트<br>BE: 파일 업로드 API(S3), 메시지 저장/조회 API<br>AI: 전체 맥락 기반 질문 생성 로직 고도화<br>POC: 사용자 답변 품질 평가 모델(v1) 개발", test: "AI 채팅 기능 E2E 테스트, 파일 업로드 보안 테스트" },
+                { id: 5, title: "리포트 생성 및 변호사 뷰", goal: "AI 상담 결과를 변호사가 확인할 수 있는 리포트 및 대시보드 기능을 구현합니다.", planning: "변호사 대시보드/리포트 뷰 디자인 확정", dev: "FE: 변호사 대시보드, 리포트 상세 뷰 UI<br>BE: 리포트 생성/상태 관리 API, 대시보드 데이터 조회 API<br>AI: 상담 요약 및 리포트 생성 API (Gemini Pro)<br>POC: 생성된 리포트 오프라인 평가", test: "전체 시나리오 E2E 테스트, 리포트 내용 정확성 검증" },
+                { id: 6, title: "안정화 및 Private Beta 준비", goal: "MVP의 안정성을 확보하고 비공개 테스트를 위한 최종 준비를 마칩니다.", planning: "Private Beta 테스트 계획 수립, 사용자/운영 매뉴얼 작성", dev: "All: 버그 수정 및 성능 최적화, 로깅/모니터링 강화, 보안 취약점 점검 및 보완", test: "사용자 인수 테스트(UAT), 부하/성능 테스트, 최종 보안 점검" }
+            ]
         };
 
-        // 'default_values.py'의 SUPPORTED_LANGUAGES (참고용)
-        const SUPPORTED_LANGUAGES = {
-            "ko": "한국어", "en": "영어", "zh": "중국어", "es": "스페인어", "ja": "일본어",
-            "vi": "베트남어", "th": "태국어", "ms": "말레이어", "id": "인도네시아어", "fil": "필리핀어", "ru": "러시아어"
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            renderKpiCards();
+            renderFeatureFilters();
+            renderFeatureCards('All');
+            renderLegalCategories();
+            renderUserJourney();
+            renderArchitectureDiagram();
+            renderEvaluationModel();
+            renderCompetitionChart();
+            setupRiskMatrix();
+            renderSprintRoadmap();
+            setupNavigation();
 
-        const BASE_LANGUAGE = 'ko';
-        const END_OF_QUESTION_CODE = 'END';
+            setTimeout(drawArchitectureLines, 100);
+            window.addEventListener('resize', drawArchitectureLines);
+        });
 
-        // 'schema.sql' 또는 'default_values.py'의 DEFAULT_SCHEMA_SQL
-        const DEFAULT_SCHEMA_SQL = `
-CREATE SCHEMA IF NOT EXISTS consultation;
-
--- 1. 메인 카테고리
-CREATE TABLE consultation.categories (
-    id INT PRIMARY KEY,
-    code VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    display_order INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 1-1. 메인 카테고리 다국어
-CREATE TABLE consultation.category_translations (
-    id SERIAL PRIMARY KEY,
-    category_id INT NOT NULL REFERENCES consultation.categories(id) ON DELETE CASCADE,
-    language VARCHAR(10) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (category_id, language)
-);
-
--- 2. 서브 카테고리
-CREATE TABLE consultation.sub_categories (
-    id INT PRIMARY KEY,
-    category_id INT NOT NULL REFERENCES consultation.categories(id) ON DELETE CASCADE,
-    code VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    display_order INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 2-1. 서브 카테고리 다국어
-CREATE TABLE consultation.sub_category_translations (
-    id SERIAL PRIMARY KEY,
-    sub_category_id INT NOT NULL REFERENCES consultation.sub_categories(id) ON DELETE CASCADE,
-    language VARCHAR(10) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (sub_category_id, language)
-);
-
--- 3. 사전 질문
-CREATE TABLE consultation.pre_questions (
-    id SERIAL PRIMARY KEY,
-    sub_category_id INT NOT NULL REFERENCES consultation.sub_categories(id) ON DELETE CASCADE,
-    code VARCHAR(100) UNIQUE NOT NULL, -- 'SQ001'과 같은 코드
-    description TEXT,
-    step INT NOT NULL,
-    display_order INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 3-1. 사전 질문 다국어
-CREATE TABLE consultation.pre_question_translations (
-    id SERIAL PRIMARY KEY,
-    pre_question_id INT NOT NULL REFERENCES consultation.pre_questions(id) ON DELETE CASCADE,
-    language VARCHAR(10) NOT NULL,
-    question_text TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (pre_question_id, language)
-);
-
--- 4. 사전 질문 선택지
-CREATE TABLE consultation.pre_question_options (
-    id SERIAL PRIMARY KEY,
-    pre_question_id INT NOT NULL REFERENCES consultation.pre_questions(id) ON DELETE CASCADE,
-    code VARCHAR(100) UNIQUE NOT NULL, -- 'SQ001_O001'과 같은 코드
-    next_question_code VARCHAR(100), -- 분기 로직
-    description TEXT,
-    display_order INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT true NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 4-1. 사전 질문 선택지 다국어
-CREATE TABLE consultation.pre_question_option_translations (
-    id SERIAL PRIMARY KEY,
-    pre_question_option_id INT NOT NULL REFERENCES consultation.pre_question_options(id) ON DELETE CASCADE,
-    language VARCHAR(10) NOT NULL,
-    option_text VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (pre_question_option_id, language)
-);
-        `.trim();
-
-        // --- 1. 전역 상태 변수 ---
-        /** @type {Object<string, {file: File, data: Object}>} */
-        let loadedFiles = {};
-        /** @type {string|null} */
-        let generatedSqlContent = null;
-        /** @type {HTMLInputElement} */
-        let currentFilePickerSubCatId = null;
-
-        // --- 2. DOM 참조 ---
-        const categoryListDiv = document.getElementById('category-list');
-        const logOutput = document.getElementById('log-output');
-        const generateSqlButton = document.getElementById('generate-sql-button');
-        const downloadSqlButton = document.getElementById('download-sql-button');
-        const toggleAllCheckboxesButton = document.getElementById('toggle-all-checkboxes');
-
-        // 파일 피커
-        const filePicker = document.getElementById('file-picker');
-
-        // 모달
-        const modal = document.getElementById('modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-        const modalClose = document.getElementById('modal-close');
-        const showSchemaButton = document.getElementById('show-schema-button');
-
-        // --- 3. 헬퍼 함수 (Python 로직 이식) ---
-
-        /**
-         * 로그를 화면에 출력
-         * @param {string} message
-         */
-        function logMessage(message) {
-            console.log(message);
-            logOutput.value += `[${new Date().toLocaleTimeString()}] ${message}\n`;
-            logOutput.scrollTop = logOutput.scrollHeight; // 자동 스크롤
+        function renderKpiCards() {
+            const container = document.getElementById('kpi-cards');
+            container.innerHTML = AppData.kpis.map(kpi => `
+                <div class="card p-6 text-center">
+                    <p class="text-sm text-gray-500">${kpi.title}</p>
+                    <p class="text-4xl font-bold my-2" style="color: #0A2E5C;">${kpi.value}</p>
+                    <p class="text-lg font-semibold text-gray-700">${kpi.suffix}</p>
+                    <p class="text-xs text-gray-500 mt-3">${kpi.description}</p>
+                </div>
+            `).join('');
         }
 
-        /**
-         * 텍스트를 정리 (SQL 인젝션 방지)
-         * @param {string} text
-         * @returns {string}
-         */
-        function clean_text(text) {
-            if (!text) return "";
-            return text.replace(/\n/g, ' ')
-                       .replace(/\r/g, '')
-                       .trim()
-                       .replace(/'/g, "''"); // '를 ''로 이스케이프
-        }
+        function renderFeatureFilters() {
+            const container = document.getElementById('feature-filters');
+            const priorities = ['All', 'Must', 'Should', 'Could', "Won't"];
+            const colors = { 'All': 'blue', 'Must': 'red', 'Should': 'yellow', 'Could': 'green', "Won't": 'gray' };
+            container.innerHTML = priorities.map(p => `
+                <button class="feature-filter-btn px-3 py-1 text-sm font-medium rounded-full border-2 bg-${colors[p]}-100 border-${colors[p]}-500 text-${colors[p]}-800 ${p === 'All' ? 'bg-blue-500 text-white' : ''}" data-priority="${p}">${p}</button>
+            `).join('');
 
-        /**
-         * 더미 JSON 데이터 생성 (Python 'generate_dummy_json' 이식)
-         * @param {string} sub_cat_name
-         * @returns {Object}
-         */
-        function generate_dummy_json(sub_cat_name) {
-            const dummy_indicator = "(더미 데이터 입니다)";
-            logMessage(`[알림] 더미 데이터 생성: ${sub_cat_name}`);
-            return {
-                "id": `dummy-${sub_cat_name}`, "title": sub_cat_name,
-                "fields": [
-                    {"id": "q1_id", "ref": "q1_ref", "title": `[${sub_cat_name}] 사건의 피해자이십니까? ${dummy_indicator}`,
-                    "properties": {"choices": [{"id": "q1_yes_id", "ref": "q1_yes_ref", "label": "예 (피해자)"}, {"id": "q1_no_id", "ref": "q1_no_ref", "label": "아니오 (가해자)"}]}},
-                    {"id": "q2_victim_id", "ref": "q2_victim_ref", "title": `(피해자) 현재 증거 자료가 준비되셨나요? ${dummy_indicator}`,
-                    "properties": {"choices": [{"id": "q2_yes_id", "ref": "q2_yes_ref", "label": "예"}, {"id": "q2_no_id", "ref": "q2_no_ref", "label": "아니오"}]}},
-                    {"id": "q3_perp_id", "ref": "q3_perp_ref", "title": `(가해자) 혐의를 인정하십니까? ${dummy_indicator}`,
-                    "properties": {"choices": [{"id": "q3_yes_id", "ref": "q3_yes_ref", "label": "예"}, {"id": "q3_no_id", "ref": "q3_no_ref", "label": "아니오"}]}}],
-                "logic": [
-                    {"ref": "q1_ref", "actions": [
-                        {"condition": {"op": "is", "vars": [{}, {"type": "choice", "value": "q1_yes_ref"}]}, "details": {"to": {"type": "field", "value": "q2_victim_ref"}}},
-                        {"condition": {"op": "is", "vars": [{}, {"type": "choice", "value": "q1_no_ref"}]}, "details": {"to": {"type": "field", "value": "q3_perp_ref"}}}]},
-                    {"ref": "q2_victim_ref", "actions": [{"condition": {"op": "always", "vars": []}, "details": {"to": {"type": "thankyou", "value": "default_tys"}}}]},
-                    {"ref": "q3_perp_ref", "actions": [{"condition": {"op": "always", "vars": []}, "details": {"to": {"type": "thankyou", "value": "default_tys"}}}]}]
-            };
-        }
-
-        /**
-         * JSON 데이터를 분석하여 트리 구조 생성 (Python 'build_tree_data' 이식)
-         * @param {Object} json_data
-         * @param {number} sub_cat_id
-         * @returns {Object}
-         */
-        function build_tree_data(json_data, sub_cat_id) {
-            const tree = {};
-            const ref_to_q_code = {};
-            const fields = json_data.fields || [];
-
-            fields.forEach((field, i) => {
-                const q_code = `${sub_cat_id}_Q${String(i + 1).padStart(3, '0')}`;
-                ref_to_q_code[field.ref] = q_code;
-            });
-
-            const logic_map = {};
-            (json_data.logic || []).forEach(logic => {
-                const current_q_ref = logic.ref;
-                (logic.actions || []).forEach(action => {
-                    let next_q_ref = action.details.to.value;
-                    if (action.details.to.type === 'thankyou') next_q_ref = END_OF_QUESTION_CODE;
-                    const condition = action.condition;
-                    if (condition.op === 'is') {
-                        logic_map[[current_q_ref, condition.vars[1].value]] = next_q_ref;
-                    } else if (condition.op === 'always') {
-                        logic_map[[current_q_ref, 'always']] = next_q_ref;
-                    }
-                });
-            });
-
-            fields.forEach((field, i) => {
-                const q_ref = field.ref;
-                const q_code = ref_to_q_code[q_ref];
-                const q_text = clean_text(field.title);
-                const answers_data = [];
-                const choices = (field.properties || {}).choices || [];
-
-                if (choices.length === 0) {
-                    const next_q_ref = logic_map[[q_ref, 'always']];
-                    const next_q = (next_q_ref === END_OF_QUESTION_CODE) ? END_OF_QUESTION_CODE : (ref_to_q_code[next_q_ref] || "???");
-                    answers_data.push({"text": "(주관식 답변)", "next_q": next_q});
-                } else {
-                    choices.forEach(choice => {
-                        const c_ref = choice.ref;
-                        const c_text = clean_text(choice.label);
-                        let next_q_ref = logic_map[[q_ref, c_ref]];
-                        if (!next_q_ref) next_q_ref = logic_map[[q_ref, 'always']];
-                        const next_q = (next_q_ref === END_OF_QUESTION_CODE) ? END_OF_QUESTION_CODE : (ref_to_q_code[next_q_ref] || "???");
-                        answers_data.push({"text": c_text, "next_q": next_q});
+            container.addEventListener('click', e => {
+                if (e.target.classList.contains('feature-filter-btn')) {
+                    const priority = e.target.dataset.priority;
+                    document.querySelectorAll('.feature-filter-btn').forEach(btn => {
+                        const p = btn.dataset.priority;
+                        btn.className = `feature-filter-btn px-3 py-1 text-sm font-medium rounded-full border-2 bg-${colors[p]}-100 border-${colors[p]}-500 text-${colors[p]}-800`;
                     });
+                    e.target.className = `feature-filter-btn px-3 py-1 text-sm font-medium rounded-full border-2 bg-blue-500 text-white`;
+                    renderFeatureCards(priority);
                 }
-                tree[q_code] = {"text": q_text, "answers": answers_data, "ref": q_ref};
             });
-            return { tree_data: tree, ref_map: ref_to_q_code };
         }
 
-        /**
-         * 트리 구조를 HTML로 렌더링 (Python 'build_tree_view_controls' 이식)
-         * @param {Object} tree_data
-         * @param {string} start_question_ref
-         * @param {Object} ref_to_q_code
-         * @returns {string}
-         */
-        function build_tree_view_html(tree_data, start_question_ref, ref_to_q_code) {
-            if (!tree_data || !start_question_ref) {
-                return `<p style="color: red;">표시할 질문 데이터가 없습니다.</p>`;
-            }
-            const start_q_code = ref_to_q_code[start_question_ref];
-            if (!start_q_code) {
-                return `<p style="color: red;">시작 질문을 찾을 수 없습니다.</p>`;
-            }
+        function renderFeatureCards(priority) {
+            const container = document.getElementById('feature-cards');
+            const filteredFeatures = priority === 'All' ? AppData.features : AppData.features.filter(f => f.priority === priority);
+            const colors = { 'Must': 'red', 'Should': 'yellow', 'Could': 'green', "Won't": 'gray' };
+            container.innerHTML = filteredFeatures.map(feature => {
+                const color = colors[feature.priority];
+                return `
+                <div class="p-4 rounded-lg border-l-4 border-${color}-500 bg-gray-50">
+                    <div class="flex justify-between items-center mb-1">
+                        <p class="font-bold text-gray-800">${feature.name}</p>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${feature.priority}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">${feature.description}</p>
+                </div>
+            `}).join('');
+        }
 
-            let html = '<div class="tree-view">';
-            const panels_dict = {};
+        function renderLegalCategories() {
+            const container = document.getElementById('legal-categories');
+            container.innerHTML = AppData.legalCategories.map(cat => `
+                <div class="flex-1 card p-4">
+                    <p class="text-lg font-bold flex items-center"><span class="text-2xl mr-2">${cat.icon}</span> ${cat.name}</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        ${cat.sub.map(s => `<span class="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded-full">${s}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            for (const [q_code, question] of Object.entries(tree_data)) {
-                let answers_html = '';
-                question.answers.forEach(answer => {
-                    const next_q_str = (answer.next_q !== END_OF_QUESTION_CODE) ? `➡️ <code>${answer.next_q}</code>` : "➡️ <code>종료</code>";
-                    answers_html += `<div class="answer"><i>${answer.text}</i> ${next_q_str}</div>`;
-                });
-                panels_dict[q_code] = `
+        function renderUserJourney() {
+            const container = document.getElementById('user-journey');
+            container.innerHTML = AppData.journey.map((step, index) => `
+                <div class="flex flex-col items-center text-center w-32">
+                    <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl mb-2">${step.icon}</div>
+                    <p class="font-semibold text-sm text-gray-700">${step.name}</p>
+                </div>
+                ${index < AppData.journey.length - 1 ? `<div class="flex-1 flex items-center justify-center"><span class="text-2xl text-gray-300 font-light">→</span></div>` : ''}
+            `).join('');
+        }
+
+        function renderArchitectureDiagram() {
+            const container = document.getElementById('architecture-diagram');
+            container.innerHTML = AppData.architecture.nodes.map(item => `
+                <div id="arch-${item.id}" class="arch-node has-tooltip absolute p-2 text-center bg-white border-2 border-blue-300 rounded-lg shadow-md transform ${item.position} w-32">
+                    <span class="text-xs font-bold text-blue-800">${item.name}</span>
+                    <div class="tooltip bottom-full mb-2">${item.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function createLine(container, fromEl, toEl) {
+            const fromRect = fromEl.getBoundingClientRect();
+            const toRect = toEl.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            const fromX = fromRect.left + fromRect.width / 2 - containerRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left + toRect.width / 2 - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+
+            const line = document.createElement('div');
+            line.className = 'arch-line';
+            line.style.width = `${length}px`;
+            line.style.left = `${fromX}px`;
+            line.style.top = `${fromY}px`;
+            line.style.transform = `rotate(${angle}deg)`;
+            container.appendChild(line);
+
+            const arrow = document.createElement('div');
+            arrow.className = 'arch-arrow';
+            arrow.style.left = `${toX}px`;
+            arrow.style.top = `${toY}px`;
+            arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            container.appendChild(arrow);
+        }
+
+        function drawArchitectureLines() {
+            const container = document.getElementById('architecture-diagram');
+            container.querySelectorAll('.arch-line, .arch-arrow').forEach(el => el.remove());
+
+            AppData.architecture.connections.forEach(conn => {
+                const fromEl = document.getElementById(`arch-${conn.from}`);
+                const toEl = document.getElementById(`arch-${conn.to}`);
+                if (fromEl && toEl) {
+                    createLine(container, fromEl, toEl);
+                }
+            });
+        }
+
+        function renderEvaluationModel() {
+            const container = document.getElementById('evaluation-model');
+            container.innerHTML = AppData.evaluationModel.map(model => `
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <p class="font-bold text-lg text-gray-800">${model.title}</p>
+                    <p class="text-sm text-gray-600 mt-1 mb-3">${model.description}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${model.criteria.map(c => `<span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${c}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCompetitionChart() {
+            const ctx = document.getElementById('competitionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: AppData.competition,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 10, title: { display: true, text: '평가 점수 (10점 만점)' } } },
+                    plugins: { title: { display: true, text: 'LAWGRAM vs 경쟁/대체재' } }
+                }
+            });
+        }
+
+        function setupRiskMatrix() {
+            const cells = document.querySelectorAll('.risk-cell');
+            const colors = { high: 'bg-red-200', medium: 'bg-yellow-200' };
+            const riskData = AppData.risks;
+
+            Object.keys(riskData).forEach(key => {
+                const cell = document.querySelector(`[data-risk-id="${key}"]`);
+                if (cell) {
+                    const impact = riskData[key].impact;
+                    const colorClass = impact === '높음' ? colors.high : colors.medium;
+                    cell.className += ` ${colorClass} hover:ring-2 ring-blue-500 transition-all flex items-center justify-center p-1`;
+                    cell.innerHTML = `<span class="text-xs">${riskData[key].title}</span>`;
+                    cell.addEventListener('click', () => showRiskModal(riskData[key]));
+                }
+            });
+        }
+
+        function showRiskModal(risk) {
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.classList.remove('hidden');
+            modalContainer.innerHTML = `
+                <div class="modal-backdrop">
+                    <div class="modal-content">
+                        <h3 class="text-2xl font-bold mb-4">${risk.title}</h3>
+                        <div class="mb-4 space-y-2">
+                            <p><span class="font-semibold">가능성:</span> ${risk.likelihood}</p>
+                            <p><span class="font-semibold">영향도:</span> ${risk.impact}</p>
+                            <p><span class="font-semibold">상세 내용:</span> ${risk.content}</p>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="font-bold text-blue-800 mb-2">대응 방안</p>
+                            <p class="text-sm text-blue-700">${risk.mitigation}</p>
+                        </div>
+                        <button id="close-modal" class="mt-6 w-full bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors">닫기</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('close-modal').addEventListener('click', () => modalContainer.classList.add('hidden'));
+            modalContainer.querySelector('.modal-backdrop').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) modalContainer.classList.add('hidden');
+            });
+        }
+
+        function renderSprintRoadmap() {
+            const container = document.getElementById('sprint-roadmap');
+            container.innerHTML = AppData.sprints.map(sprint => `
+                <div class="sprint-card card">
                     <details>
-                        <summary>[${q_code}] ${question.text}</summary>
-                        ${answers_html}
+                        <summary class="p-4 cursor-pointer">
+                            <p class="text-sm font-semibold text-blue-600">Sprint ${sprint.id}</p>
+                            <p class="text-lg font-bold">${sprint.title}</p>
+                            <p class="text-xs text-gray-500 mt-1">${sprint.goal}</p>
+                        </summary>
+                        <div class="px-4 pb-4 border-t border-gray-200">
+                            <div class="mt-4">
+                                <p class="font-semibold text-sm">기획/디자인:</p>
+                                <p class="text-xs text-gray-600">${sprint.planning}</p>
+                            </div>
+                            <div class="mt-3">
+                                <p class="font-semibold text-sm">개발:</p>
+                                <p class="text-xs text-gray-600">${sprint.dev}</p>
+                            </div>
+                             <div class="mt-3">
+                                <p class="font-semibold text-sm">테스트:</p>
+                                <p class="text-xs text-gray-600">${sprint.test}</p>
+                            </div>
+                        </div>
                     </details>
-                `;
-            }
-
-            const processed_codes = new Set();
-            const queue = [start_q_code];
-            while (queue.length > 0) {
-                const current_code = queue.shift();
-                if (!panels_dict[current_code] || processed_codes.has(current_code)) continue;
-
-                html += panels_dict[current_code];
-                processed_codes.add(current_code);
-
-                const question = tree_data[current_code];
-                question.answers.forEach(answer => {
-                    const next_q = answer.next_q;
-                    if (next_q !== END_OF_QUESTION_CODE && next_q !== "???" && !processed_codes.has(next_q)) {
-                        if (!queue.includes(next_q)) queue.push(next_q);
-                    }
-                });
-            }
-
-            html += '</div>';
-            return html;
+                </div>
+            `).join('');
         }
 
-        /**
-         * Typeform JSON을 SQL로 파싱 (Python 'parse_typeform_to_sql' 이식)
-         * @param {Object} json_data
-         * @param {Object} sub_cat
-         * @returns {string[]}
-         */
-        function parse_typeform_to_sql(json_data, sub_cat) {
-            const sql_commands = [];
-            try {
-                logMessage(`  > 3. 분기 로직(Logic) 파싱 중...`);
-                const logic_map = {};
-                (json_data.logic || []).forEach(logic => {
-                    const current_q_ref = logic.ref;
-                    (logic.actions || []).forEach(action => {
-                        let next_q_ref = action.details.to.value;
-                        if (action.details.to.type === 'thankyou') next_q_ref = END_OF_QUESTION_CODE;
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
 
-                        const condition = action.condition;
-                        if (condition.op === 'is') {
-                            logic_map[[current_q_ref, condition.vars[1].value]] = next_q_ref;
-                        } else if (condition.op === 'always') {
-                            logic_map[[current_q_ref, 'always']] = next_q_ref;
-                        }
-                    });
-                });
-
-                logMessage(`  > 4. 질문/답변 코드 매핑 중...`);
-                const ref_to_q_code = {};
-                const ref_to_opt_code = {};
-                const sub_cat_prefix = sub_cat.id;
-                const fields = json_data.fields || [];
-
-                fields.forEach((field, i) => {
-                    const q_code = `${sub_cat_prefix}_Q${String(i + 1).padStart(3, '0')}`;
-                    ref_to_q_code[field.ref] = q_code;
-
-                    ((field.properties || {}).choices || []).forEach((choice, j) => {
-                        const opt_code = `${q_code}_O${String(j + 1).padStart(3, '0')}`;
-                        ref_to_opt_code[choice.ref] = opt_code;
-                    });
-                });
-
-                logMessage(`  > 5. 사전 질문(Pre Questions) SQL 생성 시작...`);
-                fields.forEach((field, i) => {
-                    const field_ref = field.ref;
-                    const q_code = ref_to_q_code[field_ref];
-                    const q_title_ko = clean_text(field.title);
-                    const step = i + 1;
-                    logMessage(`    > 질문 ${step} (${q_code}): ${q_title_ko} 생성 중`);
-
-                    sql_commands.push(`\n-- 질문 ${step}: ${q_title_ko} (Code: ${q_code}) --`);
-                    sql_commands.push(
-                        `INSERT INTO consultation.pre_questions (sub_category_id, code, description, step, display_order, is_active, created_at, updated_at)\n` +
-                        `VALUES (${sub_cat.id}, '${q_code}', '${q_title_ko}', ${step}, ${i+1}, true, NOW(), NOW());`
-                    );
-
-                    // 번역 로직 제거 - 기본 언어('ko')만 추가
-                    sql_commands.push(
-                        `INSERT INTO consultation.pre_question_translations (pre_question_id, language, question_text, created_at, updated_at)\n` +
-                        `VALUES ((SELECT id FROM consultation.pre_questions WHERE code = '${q_code}'), '${BASE_LANGUAGE}', '${q_title_ko}', NOW(), NOW());`
-                    );
-
-                    const choices = (field.properties || {}).choices || [];
-                    if (choices.length === 0) {
-                        // 주관식 (선택지 없음)
-                        const next_q_ref = logic_map[[field_ref, 'always']];
-                        let next_q_code_sql = "null";
-                        if (next_q_ref === END_OF_QUESTION_CODE) {
-                            next_q_code_sql = `'${END_OF_QUESTION_CODE}'`;
-                        } else if (next_q_ref) {
-                            next_q_code_sql = `'${ref_to_q_code[next_q_ref] || ''}'`;
-                        }
-
-                        const opt_code = `${q_code}_O001`;
-                        sql_commands.push(
-                            `INSERT INTO consultation.pre_question_options (pre_question_id, code, description, display_order, is_active, next_question_code, created_at, updated_at)\n` +
-                            `VALUES ((SELECT id FROM consultation.pre_questions WHERE code = '${q_code}'), '${opt_code}', '주관식 답변', 1, true, ${next_q_code_sql}, NOW(), NOW());`
-                        );
-
-                        // 기본 언어('ko') 번역 추가
-                        sql_commands.push(
-                            `INSERT INTO consultation.pre_question_option_translations (pre_question_option_id, language, option_text, created_at, updated_at)\n` +
-                            `VALUES ((SELECT id FROM consultation.pre_question_options WHERE code = '${opt_code}'), '${BASE_LANGUAGE}', '다음', NOW(), NOW());`
-                        );
-
-                    } else {
-                        // 객관식 (선택지 있음)
-                        choices.forEach((choice, j) => {
-                            const choice_ref = choice.ref;
-                            const opt_code = ref_to_opt_code[choice_ref];
-                            const opt_label_ko = clean_text(choice.label);
-
-                            let next_q_ref = logic_map[[field_ref, choice_ref]];
-                            if (!next_q_ref) next_q_ref = logic_map[[field_ref, 'always']];
-
-                            let next_q_code_sql = "null";
-                            if (next_q_ref === END_OF_QUESTION_CODE) {
-                                next_q_code_sql = `'${END_OF_QUESTION_CODE}'`;
-                            } else if (next_q_ref) {
-                                next_q_code_sql = `'${ref_to_q_code[next_q_ref] || ''}'`;
-                            }
-
-                            sql_commands.push(
-                                `INSERT INTO consultation.pre_question_options (pre_question_id, code, description, display_order, is_active, next_question_code, created_at, updated_at)\n` +
-                                `VALUES ((SELECT id FROM consultation.pre_questions WHERE code = '${q_code}'), '${opt_code}', '${opt_label_ko}', ${j+1}, true, ${next_q_code_sql}, NOW(), NOW());`
-                            );
-
-                            // 기본 언어('ko') 번역 추가
-                            sql_commands.push(
-                                `INSERT INTO consultation.pre_question_option_translations (pre_question_option_id, language, option_text, created_at, updated_at)\n` +
-                                `VALUES ((SELECT id FROM consultation.pre_question_options WHERE code = '${opt_code}'), '${BASE_LANGUAGE}', '${opt_label_ko}', NOW(), NOW());`
-                            );
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
                         });
                     }
                 });
+            }, { rootMargin: "-50% 0px -50% 0px" });
 
-                logMessage(`  > 6. 모든 SQL 커맨드 생성 완료.`);
-                return sql_commands;
+            sections.forEach(section => observer.observe(section));
 
-            } catch (e) {
-                const error_msg = `SQL 파싱 중 오류: ${e.message} (at ${e.stack.split('\n')[1].trim()})`;
-                logMessage(`[오류] ${error_msg}`);
-                throw new Error(error_msg);
-            }
-        }
-
-        // --- 4. 메인 로직 (이벤트 핸들러) ---
-
-        /**
-         * 애플리케이션 초기화: 카테고리 목록 생성
-         */
-        function initialize() {
-            logMessage("애플리케이션 초기화 중...");
-            let html = "";
-            for (const [main_key, main_cat] of Object.entries(CATEGORIES)) {
-                html += `<div class="category-group">`;
-                html += `<div class="category-group-header">${main_cat.name}</div>`;
-
-                for (const [sub_key, sub_cat] of Object.entries(main_cat.subs)) {
-                    const sub_cat_id = sub_cat.id;
-                    html += `
-                        <div class="category-item" data-sub-cat-id="${sub_cat_id}">
-                            <input type="checkbox" id="chk-${sub_cat_id}" data-sub-cat-id="${sub_cat_id}">
-                            <label for="chk-${sub_cat_id}" class="category-item-label">${sub_cat.name}</label>
-
-                            <span class="file-status" id="status-${sub_cat_id}">선택된 JSON 파일 없음...</span>
-
-                            <button class="view-structure-button outline" data-sub-cat-id="${sub_cat_id}" data-sub-cat-name="${sub_cat.name}">구조 보기</button>
-                            <button class="load-file-button" data-sub-cat-id="${sub_cat_id}">JSON 로드</button>
-                        </div>
-                    `;
-                }
-                html += `</div>`;
-            }
-            categoryListDiv.innerHTML = html;
-            logMessage("카테고리 목록 로드 완료.");
-        }
-
-        /**
-         * 파일 선택 핸들러 (이벤트 위임)
-         * @param {Event} e
-         */
-        function handleCategoryClick(e) {
-            const target = e.target;
-
-            // "JSON 로드" 버튼 클릭
-            if (target.classList.contains('load-file-button')) {
-                const subCatId = target.dataset.subCatId;
-                currentFilePickerSubCatId = subCatId; // 현재 작업중인 ID 저장
-                filePicker.click(); // 숨겨진 파일 입력 클릭
-            }
-
-            // "구조 보기" 버튼 클릭
-            if (target.classList.contains('view-structure-button')) {
-                const subCatId = target.dataset.subCatId;
-                const subCatName = target.dataset.subCatName;
-                showTreeModal(subCatId, subCatName);
-            }
-        }
-
-        /**
-         * 실제 파일이 선택되었을 때의 핸들러
-         * @param {Event} e
-         */
-        function handleFileSelect(e) {
-            if (!currentFilePickerSubCatId || e.target.files.length === 0) {
-                logMessage("파일 선택 취소됨.");
-                currentFilePickerSubCatId = null;
-                return;
-            }
-
-            const file = e.target.files[0];
-            const subCatId = currentFilePickerSubCatId;
-            currentFilePickerSubCatId = null; // 리셋
-
-            if (!file.type.includes('json')) {
-                logMessage(`[오류] '${file.name}'은(는) JSON 파일이 아닙니다.`);
-                alert("JSON 파일만 업로드할 수 있습니다.");
-                return;
-            }
-
-            const reader = new FileReader();
-
-            reader.onload = (event) => {
-                try {
-                    const json_data = JSON.parse(event.target.result);
-                    loadedFiles[subCatId] = { file: file, data: json_data };
-
-                    // UI 업데이트
-                    const statusSpan = document.getElementById(`status-${subCatId}`);
-                    statusSpan.textContent = `✅ ${file.name}`;
-                    statusSpan.title = file.name;
-                    statusSpan.classList.add('loaded');
-
-                    logMessage(`파일 로드 성공 (${subCatId}): ${file.name}`);
-                } catch (err) {
-                    logMessage(`[오류] '${file.name}' 파일 파싱 실패: ${err.message}`);
-                    alert(`파일 파싱 오류: ${err.message}`);
-                }
-            };
-
-            reader.onerror = () => {
-                logMessage(`[오류] '${file.name}' 파일 읽기 실패.`);
-                alert("파일을 읽는 중 오류가 발생했습니다.");
-            };
-
-            reader.readAsText(file, 'UTF-8');
-
-            // 동일한 파일을 다시 선택할 수 있도록 value를 리셋
-            e.target.value = null;
-        }
-
-        /**
-         * "전체 선택/해제" 핸들러
-         */
-        function handleToggleAllCheckboxes() {
-            const checkboxes = categoryListDiv.querySelectorAll('input[type="checkbox"]');
-            // 첫 번째 체크박스 기준으로 전체 상태 결정
-            const isChecked = checkboxes.length > 0 ? !checkboxes[0].checked : false;
-            checkboxes.forEach(chk => chk.checked = isChecked);
-            logMessage(isChecked ? "모든 항목 선택됨." : "모든 항목 해제됨.");
-        }
-
-        /**
-         * "스키마 보기" 핸들러
-         */
-        function showSchemaModal() {
-            modalTitle.textContent = "데이터베이스 스키마 (schema.sql)";
-            modalBody.innerHTML = `<textarea readonly>${DEFAULT_SCHEMA_SQL}</textarea>`;
-            modal.style.display = "block";
-        }
-
-        /**
-         * "구조 보기" 핸들러
-         * @param {string} subCatId
-         * @param {string} subCatName
-         */
-        function showTreeModal(subCatId, subCatName) {
-            logMessage(`'${subCatName}'의 구조 보기 로딩 중...`);
-            let json_data = null;
-            let html_content = "";
-
-            if (loadedFiles[subCatId]) {
-                json_data = loadedFiles[subCatId].data;
-                logMessage(` > 로드된 '${loadedFiles[subCatId].file.name}' 파일 사용.`);
-            } else {
-                json_data = generate_dummy_json(subCatName);
-                logMessage(` > 로드된 파일 없음. 더미 데이터로 구조 생성.`);
-            }
-
-            if (!json_data || !json_data.fields || json_data.fields.length === 0) {
-                 html_content = `<p style="color: red;">'${subCatName}'에 유효한 질문 데이터가 없습니다.</p>`;
-                 logMessage(`[오류] '${subCatName}'에 유효한 질문 데이터가 없습니다.`);
-            } else {
-                try {
-                    const { tree_data, ref_map } = build_tree_data(json_data, parseInt(subCatId));
-                    const start_ref = json_data.fields[0].ref;
-                    html_content = build_tree_view_html(tree_data, start_ref, ref_map);
-                    logMessage(`'${subCatName}' 구조 데이터 생성 완료.`);
-                } catch (build_err) {
-                    html_content = `<p style="color: red;">트리 뷰 생성 실패:\n${build_err.message}</p>`;
-                    logMessage(`[오류] '${subCatName}' 트리 뷰 생성 실패: ${build_err.message}`);
-                }
-            }
-
-            modalTitle.textContent = `${subCatName} - 질문 구조`;
-            modalBody.innerHTML = html_content;
-            modal.style.display = "block";
-        }
-
-        /**
-         * 모달 닫기
-         */
-        function closeModal() {
-            modal.style.display = "none";
-            modalBody.innerHTML = ""; // 내용 비우기
-        }
-
-        /**
-         * "SQL 생성하기" 핸들러 (Python 'run_generation_thread' 이식)
-         */
-        function handleGenerateSql() {
-            logMessage("SQL 생성을 시작합니다...");
-            logOutput.value = "처리 로그:\n"; // 로그 초기화
-            logMessage("SQL 생성을 시작합니다...");
-
-            generateSqlButton.disabled = true;
-            generateSqlButton.textContent = "생성 중...";
-            downloadSqlButton.disabled = true;
-            generatedSqlContent = null;
-
-            let has_error = false;
-            const processed_main_cats = new Set();
-            const processed_sub_cats = new Set();
-
-            const main_cat_sql = ["-- 📜 1. 메인 카테고리 (Main Category) --"];
-            const sub_cat_sql = ["-- 📜 2. 서브 카테고리 (Sub Category) --"];
-            const pre_question_sql = ["-- 📜 3. 사전 질문 (Pre Questions) --"];
-
-            const selected_language = BASE_LANGUAGE; // 웹 버전은 'ko'만 지원
-
-            try {
-                const jobs_to_process = [];
-                logMessage("1. 작업 목록 수집 중...");
-
-                const checkboxes = categoryListDiv.querySelectorAll('input[type="checkbox"]:checked');
-                if (checkboxes.length === 0) {
-                     logMessage("선택된 서브 카테고리가 없습니다.");
-                     throw new Error("처리할 항목을 1개 이상 선택하세요.");
-                }
-
-                checkboxes.forEach(chk => {
-                    const sub_cat_id = chk.dataset.subCatId;
-                    // 부모-자식 관계 찾기
-                    let main_cat_data = null;
-                    let sub_cat_data = null;
-                    for (const main_cat of Object.values(CATEGORIES)) {
-                        for (const sub_cat of Object.values(main_cat.subs)) {
-                            if (sub_cat.id == sub_cat_id) {
-                                main_cat_data = main_cat;
-                                sub_cat_data = sub_cat;
-                                break;
-                            }
-                        }
-                        if (sub_cat_data) break;
-                    }
-
-                    if (!main_cat_data || !sub_cat_data) {
-                        logMessage(`[경고] ID ${sub_cat_id}에 해당하는 카테고리 정의를 찾을 수 없습니다. 건너뜁니다.`);
-                        return;
-                    }
-
-                    let json_data = null;
-                    if (loadedFiles[sub_cat_id]) {
-                        json_data = loadedFiles[sub_cat_id].data;
-                    } else {
-                        logMessage(` > '${sub_cat_data.name}' 파일 없음. 더미 데이터로 대체합니다.`);
-                        json_data = generate_dummy_json(sub_cat_data.name);
-                    }
-
-                    const json_title = clean_text(json_data.title);
-                    if (json_title !== sub_cat_data.name && !json_data.id.startsWith("dummy-")) {
-                         logMessage(`[경고] '${sub_cat_data.name}': JSON title 불일치 ('${json_title}'). 계속 진행합니다.`);
-                    }
-                    jobs_to_process.push({ main_cat: main_cat_data, sub_cat: sub_cat_data, json_data: json_data });
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
                 });
-
-                logMessage("2. SQL 생성 작업 시작...");
-
-                jobs_to_process.forEach(job => {
-                    const { main_cat, sub_cat, json_data } = job;
-                    logMessage(`\n--- ${main_cat.name} > ${sub_cat.name} SQL 생성 중 ---`);
-
-                    if (!processed_main_cats.has(main_cat.id)) {
-                        logMessage(`  > 메인 카테고리 '${main_cat.name}' SQL 추가`);
-                        main_cat_sql.push(`\nINSERT INTO consultation.categories (id, code, description, display_order, is_active, created_at, updated_at)\nVALUES (${main_cat.id}, '${main_cat.code}', '${main_cat.name}', 1, true, NOW(), NOW())\nON CONFLICT (id) DO NOTHING;`);
-
-                        const name_tr = clean_text(main_cat.name);
-                        const desc_text = `${main_cat.name} 관련 법률 서비스`;
-                        const desc_tr = clean_text(desc_text);
-                        main_cat_sql.push(`INSERT INTO consultation.category_translations (category_id, language, name, description, created_at, updated_at)\nVALUES (${main_cat.id}, '${selected_language}', '${name_tr}', '${desc_tr}', NOW(), NOW());`);
-
-                        processed_main_cats.add(main_cat.id);
-                    }
-
-                    if (!processed_sub_cats.has(sub_cat.id)) {
-                        logMessage(`  > 서브 카테고리 '${sub_cat.name}' SQL 추가`);
-                        sub_cat_sql.push(`\nINSERT INTO consultation.sub_categories (id, category_id, code, description, display_order, is_active, created_at, updated_at)\nVALUES (${sub_cat.id}, ${main_cat.id}, '${sub_cat.code}', '${sub_cat.name}', 1, true, NOW(), NOW())\nON CONFLICT (id) DO NOTHING;`);
-
-                        const name_tr = clean_text(sub_cat.name);
-                        const desc_text = `${sub_cat.name} 관련 법률 서비스`;
-                        const desc_tr = clean_text(desc_text);
-                        sub_cat_sql.push(`INSERT INTO consultation.sub_category_translations (sub_category_id, language, name, description, created_at, updated_at)\nVALUES (${sub_cat.id}, '${selected_language}', '${name_tr}', '${desc_tr}', NOW(), NOW());`);
-
-                        processed_sub_cats.add(sub_cat.id);
-                    }
-
-                    logMessage(`  > '${sub_cat.name}'의 사전 질문 SQL 생성...`);
-                    const question_sql_commands = parse_typeform_to_sql(json_data, sub_cat);
-                    pre_question_sql.push(...question_sql_commands);
-                });
-
-                logMessage("3. SQL 파일 취합 중...");
-
-                let final_sql = main_cat_sql.join("\n") + "\n\n" +
-                                sub_cat_sql.join("\n") + "\n\n" +
-                                pre_question_sql.join("\n");
-
-                generatedSqlContent = final_sql;
-
-                logMessage("성공! SQL 생성 완료.");
-                downloadSqlButton.disabled = false;
-
-                // 생성된 SQL 미리보기
-                showGeneratedSqlModal(generatedSqlContent);
-
-
-            } catch (e) {
-                has_error = true;
-                logMessage(`[치명적 오류] ${e.message}`);
-                alert(`오류 발생: ${e.message}`);
-            } finally {
-                generateSqlButton.disabled = false;
-                generateSqlButton.textContent = has_error ? "🚀 오류 (다시 시도)" : "🚀 SQL 생성하기";
-            }
+            });
         }
-
-        /**
-         * 생성된 SQL을 모달로 보여주기
-         * @param {string} sqlContent
-         */
-        function showGeneratedSqlModal(sqlContent) {
-            modalTitle.textContent = "생성된 SQL 스크립트";
-            modalBody.innerHTML = `<textarea readonly>${sqlContent}</textarea>`;
-            modal.style.display = "block";
-        }
-
-        /**
-         * "SQL 다운로드" 핸들러
-         */
-        function handleDownloadSql() {
-            if (!generatedSqlContent) {
-                logMessage("[오류] 다운로드할 SQL 내용이 없습니다. 먼저 SQL을 생성하세요.");
-                alert("다운로드할 SQL 내용이 없습니다. 먼저 SQL을 생성하세요.");
-                return;
-            }
-
-            try {
-                const blob = new Blob([generatedSqlContent], { type: 'text/sql;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'generated_sql_script.sql';
-                document.body.appendChild(a);
-                a.click();
-
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                logMessage("SQL 파일 다운로드 시작.");
-            } catch (e) {
-                logMessage(`[오류] 파일 다운로드 실패: ${e.message}`);
-                alert(`파일 다운로드 중 오류 발생: ${e.message}`);
-            }
-        }
-
-        // --- 5. 이벤트 리스너 바인딩 ---
-        document.addEventListener('DOMContentLoaded', initialize);
-
-        // 클릭 이벤트 위임
-        categoryListDiv.addEventListener('click', handleCategoryClick);
-
-        // 파일 피커 이벤트
-        filePicker.addEventListener('change', handleFileSelect);
-
-        // 버튼 이벤트
-        toggleAllCheckboxesButton.addEventListener('click', handleToggleAllCheckboxes);
-        generateSqlButton.addEventListener('click', handleGenerateSql);
-        downloadSqlButton.addEventListener('click', handleDownloadSql);
-
-        // 모달 이벤트
-        showSchemaButton.addEventListener('click', showSchemaModal);
-        modalClose.addEventListener('click', closeModal);
-        window.addEventListener('click', (event) => {
-            if (event.target == modal) {
-                closeModal();
-            }
-        });
 
     </script>
 </body>
